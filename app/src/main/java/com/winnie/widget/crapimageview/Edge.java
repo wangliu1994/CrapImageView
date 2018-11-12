@@ -57,9 +57,8 @@ public enum Edge {
                 mCoordinate = addJustRight(x, imageRect);
                 break;
             case BOTTOM:
-                mCoordinate = addJustBottom(y, imageRect);
-                break;
             default:
+                mCoordinate = addJustBottom(y, imageRect);
                 break;
         }
     }
@@ -159,10 +158,8 @@ public enum Edge {
                 result = mCoordinate > rectF.right;
                 break;
             case BOTTOM:
-                result = mCoordinate > rectF.bottom;
-                break;
             default:
-                result = false;
+                result = mCoordinate > rectF.bottom;
                 break;
         }
         return result;

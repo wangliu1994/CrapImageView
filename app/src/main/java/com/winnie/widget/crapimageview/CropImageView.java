@@ -69,6 +69,8 @@ public class CropImageView extends ImageView {
 
     private CropWindowEdgeSelector mPressedCropWindowEdgeSelector;
 
+    private boolean isFingerDown = false;
+
     public CropImageView(Context context) {
         super(context);
         init(context);
@@ -132,6 +134,10 @@ public class CropImageView extends ImageView {
         if (drawable == null || !(drawable instanceof BitmapDrawable)) {
             return null;
         }
+        Bitmap orgBitmap = ((BitmapDrawable) drawable).getBitmap();
+        if(orgBitmap == null){
+            return null;
+        }
         float[] matrixValues = new float[9];
         getImageMatrix().getValues(matrixValues);
         final float scaleX = matrixValues[Matrix.MSCALE_X];
@@ -142,17 +148,18 @@ public class CropImageView extends ImageView {
         float bitmapLeft = (transX < 0 ? Math.abs(transX) : 0);
         float bitmapTop = (transY < 0 ? Math.abs(transY) : 0);
 
-        Bitmap orgBitmap = ((BitmapDrawable) drawable).getBitmap();
-        float cropX = (bitmapLeft + Edge.LEFT.getCoordinate()) / scaleX;
-        float cropY = (bitmapTop + Edge.TOP.getCoordinate()) / scaleY;
+//        float cropX = (bitmapLeft + Edge.LEFT.getCoordinate()) / scaleX;
+//        float cropY = (bitmapTop + Edge.TOP.getCoordinate()) / scaleY;
+        float cropX = (Edge.LEFT.getCoordinate() - transX) / scaleX;
+        float cropY = (Edge.TOP.getCoordinate() - transY) / scaleY;
 
         float cropWidth = Math.min(Edge.getWidth() / scaleX, orgBitmap.getWidth() - cropX);
-        if (cropWidth < 0) {
-            cropWidth = 0;
+        if (cropWidth <= 1) {
+            return null;
         }
-        float cropHeight = Math.min(Edge.getHeight() / scaleX, orgBitmap.getHeight() - cropY);
-        if (cropHeight < 0) {
-            cropHeight = 0;
+        float cropHeight = Math.min(Edge.getHeight() / scaleY, orgBitmap.getHeight() - cropY);
+        if (cropHeight <= 1) {
+            return null;
         }
 
         return Bitmap.createBitmap(orgBitmap, (int) cropX, (int) cropY, (int) cropWidth, (int) cropHeight);
@@ -191,8 +198,10 @@ public class CropImageView extends ImageView {
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
 
-        //绘制九宫格引导线
-        drawGuidelines(canvas);
+        if(isFingerDown) {
+            //绘制九宫格引导线
+            drawGuidelines(canvas);
+        }
         //绘制裁剪边框
         drawBorder(canvas);
         //绘制裁剪边框的四个角
@@ -275,11 +284,13 @@ public class CropImageView extends ImageView {
 
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
+                isFingerDown = true;
                 onActionDown(event.getX(), event.getY());
                 return true;
 
             case MotionEvent.ACTION_UP:
             case MotionEvent.ACTION_CANCEL:
+                isFingerDown = false;
                 getParent().requestDisallowInterceptTouchEvent(false);
                 onActionUp();
                 return true;

@@ -17,8 +17,10 @@ public enum Edge {
     RIGHT,
     BOTTOM;
 
-    //裁剪框的最小宽度或者高度
-    private final int MIN_CROP_LENGTH_PX = 80;
+    /**
+     * 裁剪框的最小宽度或者高度
+     */
+    private final int MIN_CROP_LENGTH_PX = 150;
 
     /**
      * 上下左右边界的的坐标值，比如LEFT，RIGHT两条边的值是对应的边距离图片最左边的距离
@@ -55,7 +57,7 @@ public enum Edge {
                 mCoordinate = addJustRight(x, imageRect);
                 break;
             case BOTTOM:
-                mCoordinate = addJustTop(y, imageRect);
+                mCoordinate = addJustBottom(y, imageRect);
                 break;
             default:
                 break;
@@ -132,7 +134,7 @@ public enum Edge {
         }else {
             //裁剪框左边超过右边或者最小范围
             float top = Edge.TOP.getCoordinate();
-            if(y < top - MIN_CROP_LENGTH_PX){
+            if(y < top + MIN_CROP_LENGTH_PX){
                 y = top + MIN_CROP_LENGTH_PX;
             }
             resultY = y;

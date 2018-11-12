@@ -1,12 +1,14 @@
 package com.winnie.widget.crapimageview;
 
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.PointF;
 import android.graphics.RectF;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
@@ -40,19 +42,29 @@ public class CropImageView extends ImageView {
      */
     private float mScaleRadius;
 
-    private float mCornerThickness;
+    /**
+     * 四个角小编线的宽度
+     */
+    private float mCornerWidth;
 
-    private float mBorderThickness;
+    /**
+     * 四条边线的宽度
+     */
+    private float mBorderWidth;
 
     /**
      * 四个角小短边的长度
      */
     private float mCornerLength;
 
-    //用来表示图片边界的矩形
+    /**
+     * /用来表示图片边界的矩形
+     */
     private RectF mBitmapRect = new RectF();
 
-    //手指位置距离裁剪框的偏移量
+    /**
+     * 手指位置距离裁剪框的偏移量
+     */
     private PointF mTouchOffset = new PointF();
 
     private CropWindowEdgeSelector mPressedCropWindowEdgeSelector;
@@ -68,10 +80,14 @@ public class CropImageView extends ImageView {
     }
 
     private void init(@NonNull Context context) {
+        mScaleRadius = CropUtils.dip2px(context, 24);
+        mBorderWidth = CropUtils.dip2px(context, 3);
+        mCornerWidth = CropUtils.dip2px(context, 5);
+        mCornerLength = CropUtils.dip2px(context, 20);
 
         mBorderPaint = new Paint();
         mBorderPaint.setStyle(Paint.Style.STROKE);
-        mBorderPaint.setStrokeWidth(CropUtils.dip2px(context, 3));
+        mBorderPaint.setStrokeWidth(mBorderWidth);
         mBorderPaint.setColor(Color.parseColor("#AAFFFFFF"));
 
         mGuidelinePaint = new Paint();
@@ -82,14 +98,8 @@ public class CropImageView extends ImageView {
 
         mCornerPaint = new Paint();
         mCornerPaint.setStyle(Paint.Style.STROKE);
-        mCornerPaint.setStrokeWidth(CropUtils.dip2px(context, 5));
+        mCornerPaint.setStrokeWidth(mCornerWidth);
         mCornerPaint.setColor(Color.WHITE);
-
-
-        mScaleRadius = CropUtils.dip2px(context, 24);
-        mBorderThickness = CropUtils.dip2px(context, 3);
-        mCornerThickness = CropUtils.dip2px(context, 5);
-        mCornerLength = CropUtils.dip2px(context, 20);
     }
 
     @Override
@@ -112,6 +122,40 @@ public class CropImageView extends ImageView {
         Edge.TOP.initCoordinate(bitmapRect.top + verticalPadding);
         Edge.RIGHT.initCoordinate(bitmapRect.right - horizontalPadding);
         Edge.BOTTOM.initCoordinate(bitmapRect.bottom - verticalPadding);
+    }
+
+    /**
+     * 获取裁剪好的BitMap
+     */
+    public Bitmap getCroppedImage() {
+        Drawable drawable = getDrawable();
+        if (drawable == null || !(drawable instanceof BitmapDrawable)) {
+            return null;
+        }
+        float[] matrixValues = new float[9];
+        getImageMatrix().getValues(matrixValues);
+        final float scaleX = matrixValues[Matrix.MSCALE_X];
+        final float scaleY = matrixValues[Matrix.MSCALE_Y];
+        final float transX = matrixValues[Matrix.MTRANS_X];
+        final float transY = matrixValues[Matrix.MTRANS_Y];
+
+        float bitmapLeft = (transX < 0 ? Math.abs(transX) : 0);
+        float bitmapTop = (transY < 0 ? Math.abs(transY) : 0);
+
+        Bitmap orgBitmap = ((BitmapDrawable) drawable).getBitmap();
+        float cropX = (bitmapLeft + Edge.LEFT.getCoordinate()) / scaleX;
+        float cropY = (bitmapTop + Edge.TOP.getCoordinate()) / scaleY;
+
+        float cropWidth = Math.min(Edge.getWidth() / scaleX, orgBitmap.getWidth() - cropX);
+        if (cropWidth < 0) {
+            cropWidth = 0;
+        }
+        float cropHeight = Math.min(Edge.getHeight() / scaleX, orgBitmap.getHeight() - cropY);
+        if (cropHeight < 0) {
+            cropHeight = 0;
+        }
+
+        return Bitmap.createBitmap(orgBitmap, (int) cropX, (int) cropY, (int) cropWidth, (int) cropHeight);
     }
 
     private RectF getBitmapRect() {
@@ -199,9 +243,8 @@ public class CropImageView extends ImageView {
         final float bottom = Edge.BOTTOM.getCoordinate();
 
         //简单的数学计算
-
-        final float lateralOffset = (mCornerThickness - mBorderThickness) / 2f;
-        final float startOffset = mCornerThickness - (mBorderThickness / 2f);
+        final float lateralOffset = (mCornerWidth - mBorderWidth) / 2f;
+        final float startOffset = mCornerWidth - mBorderWidth / 2f;
 
         //左上角左面的短线
         canvas.drawLine(left - lateralOffset, top - startOffset, left - lateralOffset, top + mCornerLength, mCornerPaint);
@@ -260,7 +303,7 @@ public class CropImageView extends ImageView {
         final float bottom = Edge.BOTTOM.getCoordinate();
 
         //获取手指所在位置位于裁剪框的哪个位置
-        mPressedCropWindowEdgeSelector = CropUtils.getPressedHandle(x, y, left, top, right, bottom, mScaleRadius);
+        mPressedCropWindowEdgeSelector = CropUtils.getPressedPosition(x, y, left, top, right, bottom, mScaleRadius);
 
         if (mPressedCropWindowEdgeSelector != null) {
             //计算手指按下的位置与裁剪框的偏移量

@@ -22,9 +22,9 @@ public class CropUtils {
     }
 
 
-    public static CropWindowEdgeSelector getPressedHandle(float x, float y,
-                                                          float left, float top, float right, float bottom,
-                                                          float targetRadius) {
+    public static CropWindowEdgeSelector getPressedPosition(float x, float y,
+                                                            float left, float top, float right, float bottom,
+                                                            float targetRadius) {
 
         CropWindowEdgeSelector nearestCropWindowEdgeSelector = null;
 
@@ -148,16 +148,16 @@ public class CropUtils {
     }
 
 
-    private static boolean isInHorizontalTargetZone(float x, float y, float handleXStart, float handleXEnd,
+    private static boolean isInHorizontalTargetZone(float x, float y, float left, float right,
                                                     float handleY, float targetRadius) {
 
-        return (x > handleXStart && x < handleXEnd && Math.abs(y - handleY) <= targetRadius);
+        return (x > left && x < right && Math.abs(y - handleY) <= targetRadius);
     }
 
 
-    private static boolean isInVerticalTargetZone(float x, float y, float handleX, float handleYStart,
-                                                  float handleYEnd, float targetRadius) {
-        return (Math.abs(x - handleX) <= targetRadius && y > handleYStart && y < handleYEnd);
+    private static boolean isInVerticalTargetZone(float x, float y, float handleX, float top,
+                                                  float bottom, float targetRadius) {
+        return (Math.abs(x - handleX) <= targetRadius && y > top && y < bottom);
     }
 
     private static boolean isWithinBounds(float x, float y, float left, float top, float right, float bottom) {

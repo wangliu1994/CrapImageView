@@ -155,11 +155,11 @@ public class CropImageView extends ImageView {
 
         float cropWidth = Math.min(Edge.getWidth() / scaleX, orgBitmap.getWidth() - cropX);
         if (cropWidth <= 1) {
-            return null;
+            cropWidth = 1;
         }
         float cropHeight = Math.min(Edge.getHeight() / scaleY, orgBitmap.getHeight() - cropY);
         if (cropHeight <= 1) {
-            return null;
+            cropHeight = 1;
         }
 
         return Bitmap.createBitmap(orgBitmap, (int) cropX, (int) cropY, (int) cropWidth, (int) cropHeight);

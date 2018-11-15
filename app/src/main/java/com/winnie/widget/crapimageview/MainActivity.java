@@ -3,6 +3,7 @@ package com.winnie.widget.crapimageview;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -23,6 +24,7 @@ public class MainActivity extends AppCompatActivity {
         okButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                Toast.makeText(MainActivity.this, "开始裁剪图片", Toast.LENGTH_LONG).show();
                 mCropImageView.setImageBitmap(mCropImageView.getCroppedImage());
             }
         });
